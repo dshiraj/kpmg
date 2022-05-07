@@ -1,0 +1,36 @@
+function extract($object,$keys) {
+
+    $keys | ForEach-Object{ 
+    $object=$object[$_]
+   
+   }
+    $s=$dict | ConvertTo-Json -Compress
+    return $s
+
+}
+
+—------------------test cases—-------------------------
+PS C:\Users\shirajuddind094> $object=@{'a'=@{'b'=@{'c'='d'}}}
+PS C:\Users\shirajuddind094> $key=('a','b','c')
+PS C:\Users\shirajuddind094> extract -dict $object -keys $key
+"d"
+
+2)
+PS C:\Users\shirajuddind094> $key=('a','b')
+PS C:\Users\shirajuddind094> $object=@{'a'=@{'b'=@{'c'='d'}}}
+
+PS C:\Users\shirajuddind094> extract -dict $object -keys $key
+{"c":"d"}
+
+3)PS C:\Users\shirajuddind094> $object=@{'x'=@{'y'=@{'z'='a'}}}
+PS C:\Users\shirajuddind094> $object=@{'x'=@{'y'=@{'z'='a'}}}
+$key=('x','y','z')
+
+PS C:\Users\shirajuddind094> extract -dict $object -keys $key
+"a"
+
+4)PS C:\Users\shirajuddind094> $object=@{'x'=@{'y'=@{'z'='a'}}}
+$key=('x')
+
+extract -dict $object -keys $key
+{"y":{"z":"a"}}
