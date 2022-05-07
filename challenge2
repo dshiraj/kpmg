@@ -1,0 +1,45 @@
+function metadata {
+
+param(
+$subscription,
+$resourcgroup,
+$resourcetype,
+$resourcename,
+$metadata
+)
+
+Select-AzSubscription $subscription | Out-Null
+$out=Get-AzResource -ResourceGroupName $resourcgroup -ResourceType $resourcetype -Name $resourcename
+$out.Properties.networkAcls
+
+$all='$out'+'.'+$metadata
+Invoke-Expression $all | ConvertTo-Json }
+
+
+—-----------test cases—--------------
+
+
+PS C:\Users\***********> meta -subscription Shiraj_VS_New002 -resourcegroup ProdResources_RG_New -resourcetype 'Microsoft.Storage/storageAccounts' -resourcename azclisddnd01 -metadata Properties.accessTier
+Out:   "Hot"
+
+PS C:\Users\*************> meta -subscription Shiraj_VS_New002 -resourcegroup ProdResources_RG_New -resourcetype 'Microsoft.Storage/storageAccounts' -resourcename azclisddnd01 -metadata Properties.primaryEndpoints
+{
+    "dfs":  "https://azclisddnd01.dfs.core.windows.net/",
+    "web":  "https://azclisddnd01.z13.web.core.windows.net/",
+    "blob":  "https://azclisddnd01.blob.core.windows.net/",
+    "queue":  "https://azclisddnd01.queue.core.windows.net/",
+    "table":  "https://azclisddnd01.table.core.windows.net/",
+    "file":  "https://azclisddnd01.file.core.windows.net/"
+}
+
+PS C:\Users\************> meta -subscription Shiraj_VS_New002 -resourcegroup ProdResources_RG_New -resourcetype 'Microsoft.Storage/storageAccounts' -resourcename azclisddnd01 -metadata Properties.networkAcls
+{    "resourceAccessRules":  [                     ],
+    "bypass":  "AzureServices",
+    "virtualNetworkRules":  [
+
+                            ],
+    "ipRules":  [
+                    {
+                        "value":  "13.24.255.21",
+                        "action":  "Allow"
+                    },
