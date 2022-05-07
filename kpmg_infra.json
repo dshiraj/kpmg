@@ -1,0 +1,298 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.4.63.48766",
+      "templateHash": "7153102444456594205"
+    }
+  },
+  "parameters": {
+      "resourceTags": {
+          "type": "object", 
+          "defaultValue": {
+           "appname":"auto",
+           "type":"internal",
+           "owner":"global"
+          }},
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "The location in which all resources should be deployed."
+      }
+    },
+    "appName": {
+      "type": "string",
+      "defaultValue": "[uniqueString(resourceGroup().id)]",
+      "metadata": {
+        "description": "The name of the app to create."
+      }
+    },
+    "appServicePlanName":{
+        "type": "string",
+        "metadata": {
+            "description": "The name of the app service plan"
+        }
+    },
+    "appServicePlanKind": {
+        "type": "string",
+        "defaultValue": "Windows",
+        "allowedValues": [
+            "Windows",
+            "Linux"
+        ],
+        "metadata": {
+            "description": "Select Windows or Linux. Make sure to use a SKU size of Basic B1 as a minimum when selecting Linux."
+        }
+    },
+    "appServicePlanSku": {
+        "type": "string",
+        "defaultValue": "Standard",
+        "allowedValues": [ ],
+        "metadata": {
+          "description": "The pricing tier for the App Service plan. Potential values are: Free, Shared, Basic, Standard, Premium, PremiumV2, ElasticPremium, ElasticIsolated, HyperV_P1v2, HyperV_P2v2, HyperV_P3v2, HyperV_S1, LinuxFree, WorkflowStandard"
+        }
+      },
+    "appServicePlanSize": {
+        "type": "string",
+        "defaultValue": "S1",
+        "metadata": {
+            "description": "The instance size of the app. Depends on the selected tier."
+        }
+    },
+    "applicationInsightsName": {
+        "type": "string",
+        "defaultValue": "glblinsight01",
+        "metadata": {
+            "description": "name for the app insight"
+        },
+        "mySqlName": {
+            "type": "string",
+            "minLength": 12,
+            "metadata": {
+                "description": "MySQL Instance name. Example: gx-zu2appddm001. See HyCS Naming Convention for details."
+            }
+        },"administratorLogin": {
+            "type": "string",
+            "defaultValue": "AzPgSQLPaaSSA",
+            "metadata": {
+                "description": "Admin Username"
+            }
+        },
+        "administratorLoginPassword": {
+            "type": "securestring",
+            "metadata": {
+                "description": "Admin password. 16 characters."
+            }
+        },
+        "serverVersion": {
+            "type": "string",
+            "defaultValue": "5.7",
+            "metadata": {
+                "description": "Server Version - can be 5.6 or 5.7."
+            }
+        },
+        "maxStorage": {
+            "type": "int",
+            "defaultValue": 5120,
+            "metadata": {
+                "description": "Maximum Storage allowed for the Server in MB. Min: 5120."
+            }
+        },
+        "backupRetentionDays": {
+            "type": "int",
+            "defaultValue": 14,
+            "metadata": {
+                "description": "Backup retention (days). Default: 14."
+            }
+        },
+        "geoRedundantBackup": {
+            "type": "string",
+            "defaultValue": "Disabled",
+            "metadata": {
+                "description": "Enabled or Disabled (default)."
+            }
+        },
+        "skuName": {
+            "type": "string",
+            "defaultValue": "B_Gen5_1",
+            "metadata": {
+                "description": "Name of the Sku. Tier + Family + Cores, i.E. B_Gen5_1"
+            }
+        },
+        "skuTier": {
+            "type": "string",
+            "defaultValue": "Basic",
+            "metadata": {
+                "description": "Tier Name. Can be either Basic, GeneralPurpose or MemoryOptimized. Please note that up/downscaling to/from Basic is not possible once deployed."
+            }
+        },
+        "skuFamily": {
+            "type": "string",
+            "defaultValue": "Gen5",
+            "metadata": {
+                "description": "Sku Family, i.E. Gen5."
+            }
+        },
+        "skuCores": {
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+                "description": "Amount of vCores, i.E. 1 to 32."
+            }
+        },
+        "keyVaultName": {
+            "type": "string",
+            "metadata": {
+              "description": "Name of the Vault"
+            }
+          },
+      
+          "keyVaultSku": {
+            "type": "string",
+            "defaultValue": "Standard",
+            "allowedValues": [
+              "Standard",
+              "Premium"
+            ],
+            "metadata": {
+              "description": "SKU for the vault"
+            }
+          },
+          "appInsightsName": {
+            "type": "string"
+        },
+    
+  }
+},
+  "resources": [
+        {
+        "type": "Microsoft.Web/serverfarms",
+        "apiVersion": "2021-01-01",
+        "name": "[parameters('appServicePlanName')]",
+        "location": "[parameters('azureLocation')]",
+        "kind": "[parameters('appServicePlanKind')]",
+        "properties": {
+            "name": "[parameters('appServicePlanName')]",
+            "reserved": false,
+            "siteConfig": {
+                "remoteDebuggingEnabled": false,
+                "webSocketsEnabled": false,
+                "netFrameworkVersion": "v4.7",
+                "requestTracingEnabled": true,
+                "httpLoggingEnabled": true,
+                "detailedErrorLoggingEnabled": true,
+                "CORS": {
+                    "supportCredentials": false
+                },
+                
+            },
+            "httpsOnly": true,
+            "minTlsVersion": "1.2"
+        },
+        "sku": {
+            "Tier": "[parameters('appServicePlanSku')]",
+            "Name": "[parameters('appServicePlanSize')]"
+        },
+        "tags": "[parameters('resourceTags')]"
+    },
+    {
+        "type": "Microsoft.Web/sites",
+        "apiVersion": "2021-01-01",
+        "name": "[parameters('appName')]",
+        "location": "[parameters('location')]",
+        "tags": "[parameters('resourceTags')]",
+        "kind": "app",
+        "dependsOn": [
+            "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
+            "[resourceId('Microsoft.Insights/components/',parameters('applicationInsightsName'))]"],
+        
+        "properties": {
+          "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('appServicePlanName'))]",
+        
+          "httpsOnly": true,
+          "appSettings": [
+            {
+                "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+                "value": "[reference('microsoft.insights/components/',parameter(appInsightsName), '2015-05-01').InstrumentationKey]"
+            },
+            {
+                "name": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+                "value": "['microsoft.insights/components/',parameter(appInsightsName), '2015-05-01').ConnectionString]"
+            },
+            {
+                "name": "ApplicationInsightsAgent_EXTENSION_VERSION",
+                "value": "~3"
+            },
+            {
+                "name": "XDT_MicrosoftApplicationInsights_Mode",
+                "value": "Recommended"
+            }
+        ],
+        
+        }
+      },
+
+      {
+        "type": "Microsoft.DBforMySQL/servers", 
+        "apiVersion": "2017-12-01",
+        "kind": "DB",
+        "location": "[parameters('azureLocation')]",
+        "name": "[parameters('mySqlName')]",
+        "properties": {
+            "version": "[parameters('serverVersion')]",
+            "createMode": "Default",
+            "minimalTlsVersion": "TLS1_2",
+            "administratorLogin": "[parameters('administratorLogin')]",
+            "administratorLoginPassword": "[parameters('administratorLoginPassword')]",
+            "storageProfile": {
+                "storageMB": "[parameters('maxStorage')]",
+                "backupRetentionDays": "[parameters('backupRetentionDays')]",
+                "geoRedundantBackup": "[parameters('geoRedundantBackup')]"
+            }
+        },
+        "sku": {
+            "name": "[parameters('skuName')]",
+            "tier": "[parameters('skuTier')]",
+            "capacity": "[parameters('skuCores')]",
+            "family": "[parameters('skuFamily')]"
+        },
+        "tags": "[parameters('resourceTags')]"
+    },
+
+    {
+        "type": "Microsoft.KeyVault/vaults",
+        "name": "[parameters('keyVaultName')]",
+        "apiVersion": "2021-02-14",
+        "tags": "[parameters('resourceTags')]",
+        "location": "[parameters('azureLocation')]",
+        "properties": {
+          "enableSoftDelete": true,
+          "enablePurgeProtection": true,
+          "accessPolicies": [ ],
+          "sku": {
+            "name": "[parameters('keyVaultSku')]",
+            "family": "A"
+          }
+        },
+        
+      },
+
+      {
+        "type": "Microsoft.Insights/components",
+        "name": "[parameters('appInsightsName')]",
+        "apiVersion": "2020-02-02",
+        "tags": "[parameters('resourceTags')]",
+        "location": "[parameters('azureLocation')]",
+        "properties": {
+            "ApplicationId": "[parameters('appInsightsName')]",
+            "Application_Type": "other",
+            "Flow_Type": "Bluefield",
+            "Request_Source": "[parameters('appInsightsRequestSource')]"
+        }
+    }
+
+  ]
+}
